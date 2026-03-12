@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>GC Campus Visual Action Overlay - 10 Min Timer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700;900&family=Poppins:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            font-family: 'Noto Sans Devanagari', sans-serif; 
+            background: transparent;
+        }
+
+        #action-banner {
+            position: absolute;
+            bottom: 6%; 
+            left: -100%; 
+            display: flex;
+            align-items: stretch;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: left 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            max-width: 1000px;
+        }
+
+        #action-banner.show {
+            left: 3%; 
+        }
+
+        /* Logo Box */
+        .brand-box {
+            background: #0b1a30; 
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 130px;
+        }
+        
+        .brand-box img {
+            width: 100px; 
+            height: auto;
+            max-height: 100px; 
+            object-fit: contain; 
+        }
+
+        /* Text Area */
+        .cta-box {
+            padding: 15px 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex: 1; 
+        }
+
+        .main-action-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 5px;
+        }
+
+        .main-action-wrapper i {
+            font-size: 28px; 
+        }
+
+        .main-action-text {
+            font-size: 26px; 
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .reason-text {
+            font-size: 16px; 
+            color: #444444;
+            font-weight: 500;
+            line-height: 1.4;
+            margin-left: 40px; 
+        }
+
+        /* Demo Area */
+        .demo-box {
+            background: #f8f9fa;
+            border-left: 2px solid #e0e0e0;
+            min-width: 220px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Mock Buttons */
+        .mock-btn {
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-sub-before { background: #cc0000; color: white; }
+        .btn-sub-after { background: #f1f1f1; color: #606060; }
+        
+        .mock-icon {
+            font-size: 40px;
+            transition: all 0.3s ease;
+        }
+        
+        .icon-like-before { color: #aaaaaa; }
+        .icon-like-after { color: #065fd4; transform: scale(1.1); }
+        
+        .icon-share-before { color: #606060; }
+        .icon-share-after { color: #065fd4; transform: scale(1.1); }
+
+        .icon-bell-before { color: #aaaaaa; }
+        .icon-bell-after { color: #cc0000; transform: scale(1.1); animation: ring 0.5s ease; }
+
+        @keyframes ring {
+            0% { transform: rotate(0); }
+            25% { transform: rotate(15deg); }
+            50% { transform: rotate(-15deg); }
+            75% { transform: rotate(10deg); }
+            100% { transform: rotate(0); }
+        }
+
+        /* Animated Cursor */
+        .cursor {
+            position: absolute;
+            font-size: 28px;
+            color: #000;
+            filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.4));
+            z-index: 10;
+            opacity: 0;
+            top: 100px;
+            left: 150px;
+        }
+
+        .cursor.animate {
+            animation: clickSequence 3.5s forwards;
+        }
+
+        @keyframes clickSequence {
+            0% { top: 120px; left: 160px; opacity: 0; }
+            10% { opacity: 1; }
+            40% { top: 45px; left: 100px; transform: scale(1); }
+            45% { top: 45px; left: 100px; transform: scale(0.8); } /* Click Point */
+            50% { top: 45px; left: 100px; transform: scale(1); }
+            80% { top: 120px; left: 160px; opacity: 1; }
+            100% { top: 120px; left: 160px; opacity: 0; }
+        }
+
+        /* Color classes */
+        .color-sub i, .color-sub .main-action-text { color: #cc0000; }
+        .color-like i, .color-like .main-action-text { color: #065fd4; }
+        .color-share i, .color-share .main-action-text { color: #00796b; }
+        .color-notify i, .color-notify .main-action-text { color: #cc0000; } 
+    </style>
+</head>
+<body>
+
+    <audio id="sound-whoosh" src="whoosh.mp3"></audio>
+    <audio id="sound-pop" src="pop.mp3"></audio>
+    <audio id="sound-bell" src="bell.mp3"></audio>
+
+    <div id="action-banner">
+        <div class="brand-box">
+            <img src="logo.png" alt="GC Campus Logo">
+        </div>
+        <div class="cta-box">
+            <div id="main-wrapper" class="main-action-wrapper">
+                <i id="main-icon" class="fas fa-play"></i>
+                <div id="main-text" class="main-action-text">Action</div>
+            </div>
+            <div id="reason-text" class="reason-text">Message</div>
+        </div>
+        <div class="demo-box">
+            <div id="demo-element"></div>
+            <i id="cursor" class="fas fa-mouse-pointer cursor"></i>
+        </div>
+    </div>
+
+    <script>
+        const banner = document.getElementById('action-banner');
+        const mainWrapper = document.getElementById('main-wrapper');
+        const mainIcon = document.getElementById('main-icon');
+        const mainText = document.getElementById('main-text');
+        const reasonText = document.getElementById('reason-text');
+        
+        const demoElement = document.getElementById('demo-element');
+        const cursor = document.getElementById('cursor');
+        const whooshSound = document.getElementById('sound-whoosh');
+
+        const actions = [
+            {
+                title: "सदस्यता लें (Subscribe)",
+                iconClass: "fab fa-youtube", 
+                colorClass: "color-sub",
+                reason: "UPSC-पैटर्न विश्लेषण, गहन भू-राजनीति और मानचित्र-आधारित कक्षाओं के लिए।",
+                soundId: "sound-pop", 
+                demoBefore: '<div class="mock-btn btn-sub-before">Subscribe</div>',
+                demoAfter: '<div class="mock-btn btn-sub-after"><i class="fas fa-bell"></i> Subscribed</div>'
+            },
+            {
+                title: "लाइक करें (Like)",
+                iconClass: "fas fa-thumbs-up", 
+                colorClass: "color-like",
+                reason: "आपका एक लाइक हमें और बेहतर परीक्षा सामग्री और रणनीतियाँ लाने के लिए प्रेरित करता है।",
+                soundId: "sound-pop",
+                demoBefore: '<i class="far fa-thumbs-up mock-icon icon-like-before"></i>',
+                demoAfter: '<i class="fas fa-thumbs-up mock-icon icon-like-after"></i>'
+            },
+            {
+                title: "शेयर करें (Share)",
+                iconClass: "fas fa-share", 
+                colorClass: "color-share",
+                reason: "ज्ञान बांटने से बढ़ता है! सही जानकारी अपने दोस्तों और अन्य उम्मीदवारों तक पहुँचाएँ।",
+                soundId: "sound-pop",
+                demoBefore: '<i class="fas fa-share mock-icon icon-share-before"></i>',
+                demoAfter: '<i class="fas fa-share mock-icon icon-share-after"></i>'
+            },
+            {
+                title: "नोटिफिकेशन चालू करें",
+                iconClass: "fas fa-bell", 
+                colorClass: "color-notify",
+                reason: "बेल आइकॉन दबाएं ताकि कोई भी महत्वपूर्ण अपडेट और नई लाइव क्लास कभी मिस न हो!",
+                soundId: "sound-bell",
+                demoBefore: '<i class="far fa-bell mock-icon icon-bell-before"></i>',
+                demoAfter: '<i class="fas fa-bell mock-icon icon-bell-after"></i>'
+            }
+        ];
+
+        const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        async function playSequence() {
+            banner.classList.remove('show');
+            await delay(1000);
+
+            for (let i = 0; i < actions.length; i++) {
+                mainText.innerText = actions[i].title;
+                mainIcon.className = actions[i].iconClass;
+                mainWrapper.className = "main-action-wrapper " + actions[i].colorClass;
+                reasonText.innerText = actions[i].reason;
+                
+                demoElement.innerHTML = actions[i].demoBefore;
+                cursor.classList.remove('animate');
+                
+                // 1. Entry waqt Whoosh bajega
+                if (whooshSound) {
+                    whooshSound.currentTime = 0;
+                    whooshSound.play().catch(e => console.log("Whoosh error"));
+                }
+                banner.classList.add('show');
+                
+                await delay(800);
+                cursor.classList.add('animate');
+
+                await delay(1500);
+
+                // 2. Click hote waqt action wala sound bajega (Pop ya Bell)
+                demoElement.innerHTML = actions[i].demoAfter;
+                const currentSound = document.getElementById(actions[i].soundId);
+                if (currentSound) {
+                    currentSound.currentTime = 0;
+                    currentSound.play().catch(e => console.log("Sound error"));
+                }
+
+                await delay(4500); 
+
+                // 3. Exit waqt wapas Whoosh bajega
+                if (whooshSound) {
+                    whooshSound.currentTime = 0;
+                    whooshSound.play().catch(e => console.log("Whoosh error"));
+                }
+                banner.classList.remove('show');
+                
+                await delay(1200); 
+            }
+        }
+
+        // Har 10 minute (600,000 milliseconds) mein loop chalega
+        setInterval(playSequence, 600000);
+        
+        // OBS start hote hi 2 second baad pehli baar chalega
+        setTimeout(playSequence, 2000); 
+    </script>
+</body>
+</html>
